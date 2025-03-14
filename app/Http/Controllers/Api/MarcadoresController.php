@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+
 use App\Http\Controllers\Controller;
 use App\Models\marcadores;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class MarcadoresController extends Controller
 {
@@ -95,5 +97,48 @@ class MarcadoresController extends Controller
             ], 500);
         }
     }
+
+
+    public function obtenerDatosGoogle($tipo)
+{
+    $apiKey = config('services.google_maps.api_key'); // Obtener la clave desde el config
+    $location = '3.4516,-76.5320'; // Coordenadas de Cali
+    $radius = 25000; // Aumenté el radio de búsqueda a 25 km
+
+    if (!$apiKey) {
+        return response()->json(['error' => 'API Key no encontrada'], 500);
+    }
+
+    // Mapeo de términos en español a palabras clave en inglés y búsqueda por keyword
+    $mapaTipos = [
+        'hospital' => ['type' => 'hospital', 'keyword' => 'hospital'],
+        'colegios' => ['type' => 'school', 'keyword' => 'colegio'],
+        'hoteles' => ['type' => 'lodging', 'keyword' => 'hotel'],
+        'bancos' => ['type' => 'bank', 'keyword' => 'banco'],
+        'cajeros' => ['type' => 'atm', 'keyword' => 'cajero'],
+        'plazas' => ['type' => 'park', 'keyword' => 'plaza'],
+    ];
+
+    if (!isset($mapaTipos[$tipo])) {
+        return response()->json(['error' => 'Tipo de lugar no válido'], 400);
+    }
+
+    $params = [
+        'location' => $location,
+        'radius' => $radius,
+        'type' => $mapaTipos[$tipo]['type'],
+        'keyword' => $mapaTipos[$tipo]['keyword'], // Se usa keyword para mejorar la búsqueda
+        'language' => 'es', // Resultados en español
+        'key' => $apiKey
+    ];
+
+    $response = Http::get("https://maps.googleapis.com/maps/api/place/nearbysearch/json", $params);
+
+    return response()->json($response->json());
+}
+
+
+
+
     
 }

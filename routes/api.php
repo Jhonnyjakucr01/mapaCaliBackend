@@ -23,6 +23,8 @@ Route::group(['middleware' => 'cors'], function () {
 
     Route::apiResource('marcadores', MarcadoresController::class);
     Route::get('icono-por-categoria/{categoria}', [MarcadoresController::class, 'getIconByCategory']);
+    Route::get('obtener-datos-google/{tipo}', [MarcadoresController::class, 'obtenerDatosGoogle']);
+
 
     
 });
