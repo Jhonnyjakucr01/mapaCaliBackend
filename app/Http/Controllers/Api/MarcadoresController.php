@@ -195,7 +195,7 @@ class MarcadoresController extends Controller
         $rutaScript = base_path('app/Http/Controllers/Api/proyecciones.py');
 
         // Ruta al ejecutable de Python
-        $pythonPath = '"C:\xampp\htdocs\tesisbackend\node_modules\python"'; // Ajusta según el resultado de `where python`
+        $pythonPath = 'C:\Users\User\AppData\Local\Programs\Python\Python313\python.exe'; // Ajusta según el resultado de `where python`
 
         // Ejecutar script
         $process = new Process([$pythonPath, $rutaScript, $rutaArchivo]);

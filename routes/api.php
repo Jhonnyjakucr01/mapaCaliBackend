@@ -27,3 +27,5 @@ Route::group(['middleware' => 'cors'], function () {
     Route::post('proyecciones-cali', [MarcadoresController::class, 'procesarProyeccionesCali']);
     
 });
+
+
