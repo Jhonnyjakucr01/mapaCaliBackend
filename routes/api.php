@@ -25,7 +25,8 @@ Route::group(['middleware' => 'cors'], function () {
     Route::get('icono-por-categoria/{categoria}', [MarcadoresController::class, 'getIconByCategory']);
     Route::get('obtener-datos-google/{tipo}', [MarcadoresController::class, 'obtenerDatosGoogle']);
     Route::post('proyecciones-cali', [MarcadoresController::class, 'procesarProyeccionesCali']);
-    
+    Route::post('cluster-cali', [MarcadoresController::class, 'procesarClusteringCali']);
+
 });
 
 
