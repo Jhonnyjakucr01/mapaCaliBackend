@@ -104,8 +104,8 @@ class MarcadoresController extends Controller
     public function obtenerDatosGoogle($tipo)
     {
         $apiKey = config('services.google_maps.api_key');
-        $radius = 10000; // Reducimos el radio para hacer más búsquedas
-        $maxRequests = 5; // Número de zonas en Cali a consultar
+        $radius = 10000; 
+        $maxRequests = 5; 
 
         if (!$apiKey) {
             return response()->json(['error' => 'API Key no encontrada'], 500);

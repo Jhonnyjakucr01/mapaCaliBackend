@@ -18,8 +18,6 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score, silhouette_samples
 from sklearn.preprocessing import StandardScaler
 
-
-
 os.environ["MPLCONFIGDIR"] = os.getcwd()
 
 def fig_to_base64(fig):
@@ -92,7 +90,19 @@ def procesar_comunas(file_path):
     cluster_plot = fig_to_base64(fig3)
     plt.close(fig3)
 
-    # Calcular mejor y peor comuna con datos normalizados
+    # Identificación de Grupos Naturales
+    grupos_naturales = df.groupby('Cluster').mean().reset_index().to_dict(orient='records')
+
+    # Análisis de Patrones
+    patrones = df.groupby('Cluster').agg(['mean', 'std']).reset_index()
+    patrones.columns = ['_'.join(col).strip() for col in patrones.columns.values]
+    patrones = patrones.to_dict(orient='records')
+
+    # Segmentación
+    segmentacion = df.groupby('Cluster').size().reset_index(name='count').to_dict(orient='records')
+
+
+     # Calcular mejor y peor comuna con datos normalizados
     df['score'] = X_scaled[:, :len(features_buenas)].sum(axis=1) - X_scaled[:, len(features_buenas):].sum(axis=1)
     mejor_comuna = int(df.loc[df['score'].idxmax(), 'comuna'])
     peor_comuna = int(df.loc[df['score'].idxmin(), 'comuna'])
@@ -105,7 +115,10 @@ def procesar_comunas(file_path):
         'worst_comuna': peor_comuna,
         'elbow_plot': elbow_plot,
         'silhouette_plot': silhouette_plot,
-        'cluster_plot': cluster_plot
+        'cluster_plot': cluster_plot,
+        'grupos_naturales': grupos_naturales,
+        'patrones': patrones,
+        'segmentacion': segmentacion
     }
 
     return json.dumps(resultado)
