@@ -18,8 +18,6 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score, silhouette_samples
 from sklearn.preprocessing import StandardScaler
 
-os.environ["MPLCONFIGDIR"] = os.getcwd()
-
 def fig_to_base64(fig):
     buf = io.BytesIO()
     fig.savefig(buf, format='png', bbox_inches='tight')
@@ -78,17 +76,47 @@ def procesar_comunas(file_path):
     silhouette_plot = fig_to_base64(fig2)
     plt.close(fig2)
 
-    # Visualización con PCA
+    # Score personalizado
+    df['score'] = X_scaled[:, :len(features_buenas)].sum(axis=1) - X_scaled[:, len(features_buenas):].sum(axis=1)
+    mejor_idx = df['score'].idxmax()
+    peor_idx = df['score'].idxmin()
+    mejor_comuna = int(df.loc[mejor_idx, 'comuna'])
+    peor_comuna = int(df.loc[peor_idx, 'comuna'])
+
+    # PCA para visualización
     pca = PCA(n_components=2)
     reduced_data = pca.fit_transform(X_scaled)
     df['PCA1'] = reduced_data[:, 0]
     df['PCA2'] = reduced_data[:, 1]
 
     fig3 = plt.figure()
-    sns.scatterplot(data=df, x='PCA1', y='PCA2', hue='Cluster', palette='tab10', s=100)
+    ax = sns.scatterplot(data=df, x='PCA1', y='PCA2', hue='Cluster', palette='tab10', s=100)
     plt.title('Dispersión de Clusters (PCA)')
+
+    # Anotación de mejor y peor comuna
+    ax.scatter(df.loc[mejor_idx, 'PCA1'], df.loc[mejor_idx, 'PCA2'], color='green', edgecolor='black', s=200, label='Mejor Comuna', zorder=5)
+    ax.text(df.loc[mejor_idx, 'PCA1'], df.loc[mejor_idx, 'PCA2'], f"Mejor ({mejor_comuna})", fontsize=9, ha='right')
+
+    ax.scatter(df.loc[peor_idx, 'PCA1'], df.loc[peor_idx, 'PCA2'], color='red', edgecolor='black', s=200, label='Peor Comuna', zorder=5)
+    ax.text(df.loc[peor_idx, 'PCA1'], df.loc[peor_idx, 'PCA2'], f"Peor ({peor_comuna})", fontsize=9, ha='left')
+
+    plt.legend()
     cluster_plot = fig_to_base64(fig3)
     plt.close(fig3)
+
+    # Gráfico adicional: Score por comuna
+    df_scores = df[['comuna', 'score']].sort_values(by='score', ascending=False)
+    fig4 = plt.figure(figsize=(12, 6))
+    ax4 = sns.barplot(data=df_scores, x='comuna', y='score', palette='coolwarm')
+    plt.title('Score por Comuna (Mejor a Peor)', fontsize=14)
+    plt.xlabel('Comuna', fontsize=12)
+    plt.ylabel('Score', fontsize=12)
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.tight_layout()
+    score_plot = fig_to_base64(fig4)
+    plt.close(fig4)
+
+
 
     # Identificación de Grupos Naturales
     grupos_naturales = df.groupby('Cluster').mean().reset_index().to_dict(orient='records')
@@ -101,12 +129,6 @@ def procesar_comunas(file_path):
     # Segmentación
     segmentacion = df.groupby('Cluster').size().reset_index(name='count').to_dict(orient='records')
 
-
-     # Calcular mejor y peor comuna con datos normalizados
-    df['score'] = X_scaled[:, :len(features_buenas)].sum(axis=1) - X_scaled[:, len(features_buenas):].sum(axis=1)
-    mejor_comuna = int(df.loc[df['score'].idxmax(), 'comuna'])
-    peor_comuna = int(df.loc[df['score'].idxmin(), 'comuna'])
-
     resultado = {
         'clusters': df[['comuna', 'Cluster']].to_dict(orient='records'),
         'optimal_clusters': optimal_clusters,
@@ -116,6 +138,7 @@ def procesar_comunas(file_path):
         'elbow_plot': elbow_plot,
         'silhouette_plot': silhouette_plot,
         'cluster_plot': cluster_plot,
+        'score_plot': score_plot,
         'grupos_naturales': grupos_naturales,
         'patrones': patrones,
         'segmentacion': segmentacion
@@ -123,8 +146,6 @@ def procesar_comunas(file_path):
 
     return json.dumps(resultado)
 
-# Para ejecutar manualmente:
 if __name__ == "__main__":
-    import sys
     resultado_json = procesar_comunas(sys.argv[1])
     print(resultado_json)
